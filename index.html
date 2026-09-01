@@ -6,7 +6,7 @@
 <title>For My Sunflower 🌻</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Parisienne&family=Cormorant:ital,wght@0,500;0,600;1,500;1,600&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Parisienne&family=Cormorant:ital,wght@0,500;0,600;1,500;1,600&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Quicksand:wght@500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400;1,600&display=swap" rel="stylesheet">
 <style>
   :root{
     --sun-petal:#F7B733;
@@ -26,6 +26,10 @@
     --paper-edge:#c9ac6f;
     --accent-rose:#C1440E;
     --gold:#B8860B;
+    --album-bg:#f5f0e8;
+    --album-page:#faf6ef;
+    --album-spine:#d4c5a9;
+    --album-shadow:rgba(74,52,24,0.35);
   }
 
   *{box-sizing:border-box;}
@@ -406,72 +410,348 @@
   .btn:active{ transform:translateY(0); }
   .btn:focus-visible{ outline:3px solid var(--accent-rose); outline-offset:3px; }
 
-  /* ================= MEET STEP ================= */
-  .meet-card{
+  /* ================= PHOTO ALBUM ================= */
+  .album-overlay{
+    position:fixed;
+    inset:0;
+    z-index:20;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    background:linear-gradient(135deg, #2c1810 0%, #3d2518 30%, #1a0e08 100%);
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .6s ease;
+    overflow:hidden;
+  }
+  .album-overlay.visible{
+    opacity:1;
+    pointer-events:auto;
+  }
+
+  /* Floating petals background */
+  .album-overlay .petal{
+    position:absolute;
+    width:20px;
+    height:20px;
+    opacity:0.15;
+    animation:petalFall linear infinite;
+    pointer-events:none;
+  }
+  @keyframes petalFall{
+    0%{ transform:translateY(-10vh) rotate(0deg); opacity:0; }
+    10%{ opacity:0.15; }
+    90%{ opacity:0.08; }
+    100%{ transform:translateY(110vh) rotate(720deg); opacity:0; }
+  }
+
+  .album-title-section{
     text-align:center;
+    margin-bottom:20px;
+    z-index:2;
   }
-  .meet-icon{ font-size:40px; margin-bottom:6px; }
-  .meet-title{
-    font-family:'Cormorant', serif;
-    font-style:italic;
-    font-size:clamp(22px,4.4vw,30px);
-    margin:0 0 6px;
-    color:var(--ink);
-  }
-  .meet-sub{
-    font-family:'Cormorant Garamond', serif;
-    font-size:18px;
-    color:var(--ink-soft);
-    margin-bottom:24px;
-  }
-
-  .field-group{
-    text-align:left;
-    margin-bottom:6px;
-  }
-  .field-label{
-    display:block;
-    font-size:12px;
-    font-weight:700;
-    letter-spacing:.14em;
+  .album-title-section h2{
+    font-family:'Playfair Display', serif;
+    font-size:clamp(20px,4vw,32px);
+    color:#f5e6d0;
+    letter-spacing:0.15em;
     text-transform:uppercase;
-    color:var(--gold);
-    margin-bottom:8px;
+    margin:0 0 6px;
   }
-  .meet-input{
-    width:100%;
+  .album-title-section .album-subtitle{
     font-family:'Cormorant Garamond', serif;
-    font-size:18px;
-    padding:14px 16px;
-    border-radius:10px;
-    border:1.5px solid var(--paper-edge);
-    background:#fffaf0;
-    color:var(--ink);
-    resize:vertical;
-    min-height:64px;
-  }
-  .meet-input:focus{
-    outline:none;
-    border-color:var(--accent-rose);
-    box-shadow:0 0 0 3px rgba(193,68,14,.15);
+    font-style:italic;
+    font-size:16px;
+    color:#c9a87c;
   }
 
-  .status-msg{
-    margin-top:16px;
-    font-family:'Cormorant Garamond', serif;
-    font-size:16px;
-    color:var(--leaf-dark);
-    min-height:22px;
+  /* Book container */
+  .book-container{
+    position:relative;
+    width:min(900px, 94vw);
+    height:min(580px, 72vh);
+    perspective:2200px;
+    z-index:2;
   }
-  .status-msg.error{ color:var(--accent-rose); }
+
+  /* The open book */
+  .book{
+    position:relative;
+    width:100%;
+    height:100%;
+    display:flex;
+    transform-style:preserve-3d;
+  }
+
+  /* Book spine shadow */
+  .book::before{
+    content:'';
+    position:absolute;
+    left:50%;
+    top:2%;
+    transform:translateX(-50%);
+    width:24px;
+    height:96%;
+    background:linear-gradient(to right,
+      rgba(0,0,0,0.35),
+      rgba(0,0,0,0.08) 30%,
+      rgba(0,0,0,0.02) 50%,
+      rgba(0,0,0,0.08) 70%,
+      rgba(0,0,0,0.35)
+    );
+    z-index:10;
+    border-radius:2px;
+    pointer-events:none;
+  }
+
+  /* Page spread (left + right) */
+  .page-spread{
+    position:absolute;
+    inset:0;
+    display:flex;
+    opacity:0;
+    transition:opacity .5s ease;
+    pointer-events:none;
+  }
+  .page-spread.active{
+    opacity:1;
+    pointer-events:auto;
+  }
+
+  .page-left, .page-right{
+    flex:1;
+    position:relative;
+    padding:24px;
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+  }
+
+  .page-left{
+    background:linear-gradient(135deg, #f8f3eb 0%, #f2ead8 60%, #ede4d2 100%);
+    border-radius:8px 0 0 8px;
+    box-shadow:inset -6px 0 18px -8px rgba(0,0,0,0.12), 4px 4px 20px rgba(0,0,0,0.2);
+  }
+  .page-right{
+    background:linear-gradient(225deg, #f8f3eb 0%, #f2ead8 60%, #ede4d2 100%);
+    border-radius:0 8px 8px 0;
+    box-shadow:inset 6px 0 18px -8px rgba(0,0,0,0.12), -4px 4px 20px rgba(0,0,0,0.2);
+  }
+
+  /* Page inner border */
+  .page-left::before, .page-right::before{
+    content:'';
+    position:absolute;
+    inset:12px;
+    border:1px solid rgba(180,160,120,0.3);
+    pointer-events:none;
+    border-radius:2px;
+  }
+
+  /* Corner flourishes */
+  .page-left::after, .page-right::after{
+    content:'❋';
+    position:absolute;
+    font-size:14px;
+    color:rgba(180,140,80,0.25);
+    pointer-events:none;
+  }
+  .page-left::after{
+    top:16px; left:18px;
+  }
+  .page-right::after{
+    bottom:16px; right:18px;
+  }
+
+  /* Photo frame */
+  .photo-frame{
+    flex:1;
+    position:relative;
+    margin:16px 14px;
+    border-radius:4px;
+    overflow:hidden;
+    background:#e8dfd0;
+    box-shadow:0 4px 16px rgba(0,0,0,0.15), inset 0 0 0 1px rgba(255,255,255,0.5);
+  }
+  .photo-frame img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    display:block;
+    transition:transform .4s ease;
+  }
+  .photo-frame:hover img{
+    transform:scale(1.03);
+  }
+
+  /* Placeholder for images */
+  .photo-placeholder{
+    width:100%;
+    height:100%;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    background:linear-gradient(135deg, #ede4d2, #e0d5c0);
+    color:#b8a88a;
+    font-family:'Cormorant Garamond', serif;
+    font-style:italic;
+    font-size:16px;
+    gap:8px;
+  }
+  .photo-placeholder .ph-icon{
+    font-size:36px;
+    opacity:0.4;
+  }
+
+  /* Quote on page */
+  .page-quote{
+    text-align:center;
+    padding:12px 8px;
+    font-family:'Cormorant Garamond', serif;
+    font-style:italic;
+    font-size:clamp(13px, 2vw, 17px);
+    color:#7a6548;
+    line-height:1.5;
+    flex-shrink:0;
+  }
+  .page-quote .quote-flower{
+    display:block;
+    font-size:18px;
+    margin-bottom:4px;
+    font-style:normal;
+    opacity:0.6;
+  }
+
+  /* Page caption / names */
+  .page-caption{
+    text-align:center;
+    padding:6px 8px 0;
+    flex-shrink:0;
+  }
+  .page-caption .couple-names{
+    font-family:'Playfair Display', serif;
+    font-size:clamp(11px, 1.5vw, 15px);
+    letter-spacing:0.2em;
+    text-transform:uppercase;
+    color:#8a7560;
+  }
+  .page-caption .date-text{
+    font-family:'Cormorant Garamond', serif;
+    font-size:12px;
+    color:#a69480;
+    margin-top:2px;
+  }
+
+  /* SVG floral decorations */
+  .floral-corner{
+    position:absolute;
+    width:60px;
+    height:60px;
+    opacity:0.18;
+    pointer-events:none;
+  }
+  .floral-corner.top-right{
+    top:8px; right:8px;
+    transform:rotate(90deg);
+  }
+  .floral-corner.bottom-left{
+    bottom:8px; left:8px;
+    transform:rotate(-90deg);
+  }
+  .floral-corner.top-left{
+    top:8px; left:8px;
+  }
+  .floral-corner.bottom-right{
+    bottom:8px; right:8px;
+    transform:rotate(180deg);
+  }
+
+  /* Navigation */
+  .album-nav{
+    display:flex;
+    align-items:center;
+    gap:16px;
+    margin-top:20px;
+    z-index:2;
+  }
+  .album-nav button{
+    font-family:'Quicksand',sans-serif;
+    font-weight:700;
+    font-size:14px;
+    color:#f5e6d0;
+    background:rgba(255,255,255,0.08);
+    border:1px solid rgba(255,255,255,0.15);
+    padding:10px 24px;
+    border-radius:30px;
+    cursor:pointer;
+    backdrop-filter:blur(4px);
+    transition:all .25s ease;
+    letter-spacing:0.05em;
+  }
+  .album-nav button:hover{
+    background:rgba(255,255,255,0.15);
+    border-color:rgba(255,255,255,0.25);
+    transform:translateY(-1px);
+  }
+  .album-nav button:disabled{
+    opacity:0.3;
+    cursor:not-allowed;
+    transform:none;
+  }
+  .album-nav .page-indicator{
+    font-family:'Cormorant Garamond', serif;
+    font-size:15px;
+    color:#c9a87c;
+    letter-spacing:0.1em;
+  }
+
+  /* Page turn animation */
+  .page-spread.turning-out{
+    animation:pageTurnOut 0.5s ease forwards;
+  }
+  .page-spread.turning-in{
+    animation:pageTurnIn 0.5s ease forwards;
+  }
+  @keyframes pageTurnOut{
+    0%{ opacity:1; transform:rotateY(0deg); }
+    100%{ opacity:0; transform:rotateY(-15deg); }
+  }
+  @keyframes pageTurnIn{
+    0%{ opacity:0; transform:rotateY(15deg); }
+    100%{ opacity:1; transform:rotateY(0deg); }
+  }
+
+  /* Flower divider between elements */
+  .flower-divider{
+    text-align:center;
+    font-size:10px;
+    color:rgba(180,140,80,0.35);
+    letter-spacing:6px;
+    margin:4px 0;
+    flex-shrink:0;
+  }
 
   @media (max-width:480px){
     .parchment{ padding:28px 20px 22px; }
     .letter-body{ font-size:17px; }
+    .page-left, .page-right{ padding:14px; }
+    .photo-frame{ margin:8px 6px; }
+    .page-quote{ font-size:12px; padding:6px 4px; }
+    .album-nav button{ padding:8px 16px; font-size:12px; }
+  }
+
+  @media (max-width:640px){
+    .book-container{
+      height:min(500px, 68vh);
+    }
+    .page-quote{ font-size:12px; }
+    .page-caption .couple-names{ font-size:10px; }
   }
 
   @media (prefers-reduced-motion: reduce){
-    .sunflower-svg, .cloud, .pollen, .sun-glow, .tap-label{ animation:none !important; }
+    .sunflower-svg, .cloud, .pollen, .sun-glow, .tap-label, .petal{ animation:none !important; }
   }
 </style>
 </head>
@@ -510,53 +790,67 @@
 <!-- ============ LETTER OVERLAY ============ -->
 <div class="overlay" id="letter-overlay">
   <div class="parchment">
-    <div class="deco-header">For My Sunflower</div>
-    <div class="deco-sub">Every Word, Meant</div>
+    <div class="deco-header">For My Mayaluu</div>
+    <div class="deco-sub">One Month of Us</div>
     <div class="flourish">🌻</div>
 
     <div class="letter-body">
-      <p class="salut">My Dearest Cutiee Piee ,</p>
-      <p class="dropcap">Sometimes I still wonder how someone can walk into my life so unexpectedly and change it so beautifully.</p>
-      <p>When you first asked me to meet you, I remember being completely shocked. My mind had a thousand questions, but my heart already knew one thing. I could never say no to you. Even when I thought it might be a prank, somewhere deep inside, I hoped it wasn't. And thankfully, it wasn't.</p>
-      <p>Since then, every little moment with you has become something I quietly treasure. Every conversation, every laugh, every smile you unknowingly gave me became memories I revisit more often than I'd like to admit.</p>
-      <p>I know I have a habit of overthinking. Sometimes my heart runs ahead of time, and I end up saying things before life is ready for them. Yet through all of that, you never made me feel small. You listened. You understood. You gave me the space to be myself, and for that, I will always be grateful.</p>
-      <p>The day you told me you wanted to give us a chance is a moment I don't think I'll ever forget. It wasn't just happiness I felt. It was hope. Real hope. Knowing that you were willing to know me, understand me, and let me earn a place in your heart meant more than words can ever describe.</p>
-      <p>What I admire most about you isn't just your beauty, though you are absolutely breathtaking. It is your kindness, your calmness, the way you genuinely want to understand people before judging them, and the way you make ordinary moments feel extraordinary. You have this quiet warmth that makes everything around you feel peaceful.</p>
-      <p>I don't know what tomorrow holds, and I don't want to rush anything. If there is one thing you've taught me, it is that beautiful things deserve patience. So I will happily cherish every meeting, every coffee, every walk, every movie, every conversation, and every little memory we create together. For me, it has never been about reaching the destination quickly. It has always been about enjoying every step with you.</p>
-      <p>Thank you for trusting me enough to let me be part of your journey. Thank you for every smile, every message, and every moment you have shared with me. You may not realize it, but you have brought a kind of happiness into my life that I had not felt in a long time.</p>
-      <p>No matter where this journey takes us, I promise to respect you, support you, make you smile whenever I can, and always be honest with you. I want to be someone who brings peace to your life, not pressure. Someone who makes your days brighter, not heavier.</p>
-      <p>And if one day you choose me completely, I promise it will be one of the greatest privileges of my life.</p>
-      <p>Until then, I will keep falling for you in all the little moments.</p>
-      <p class="signoff">With all my heart,....<br>Yours Pineapple🍍</p>
+      <p class="salut">Meri Mayaluu,</p>
+      <p class="dropcap">One month with you and I still cannot believe how much you have changed in me. Before you, I was just existing, moving through my days without really feeling much of anything. I was lonely in ways I did not even talk about. Then you came, and somehow you turned that loneliness into something warm and full.</p>
+      <p>You did not just make me happy, you taught me how to love myself again. Something I had forgotten how to do. When I am with you I feel a kind of comfort I have never felt with anyone else. It is hard to explain, but being near you feels like home. Not a place, just you.</p>
+      <p>I still remember how you found me during my saddest days and somehow made me feel alive again. You brought energy back into my life without even trying. And even now, whenever I am low, you are the one who makes everything feel lighter. Sometimes you rage bait me just to see me react, and even that, I love. It is so you.</p>
+      <p>The birthday you gave me was the best one I have ever had. The letter you wrote me that day still lives in my heart. Whenever I am sad, that is what I go back to read. Your words have become my comfort on the hard days.</p>
+      <p>I love our small things the most. Making silly tiktoks together, you saying "maridim" and me smiling every single time, the chocolate and flowers you brought on my birthday. None of it was big, but all of it meant everything.</p>
+      <p>The way you love me is something I never expected and something I will never take for granted. One month in, and you have already given me more warmth than I knew I was missing.</p>
+      <p>Here is to many more months, many more small moments, and many more reasons to fall for you again and again.</p>
+      <p class="signoff">With all my heart,<br>Yours Pineapple🍍</p>
     </div>
 
     <p class="disclaimer">*The emotions are mine, just the wording is not.</p>
 
     <div class="btn-row">
-      <button class="btn" id="next-btn">Next →</button>
+      <button class="btn" id="next-btn">Open Our Album 📖</button>
     </div>
   </div>
 </div>
 
-<!-- ============ MEET OVERLAY ============ -->
-<div class="overlay" id="meet-overlay">
-  <div class="parchment meet-card">
-    <div class="meet-icon">🌻💌</div>
-    <h2 class="meet-title">One more thing…</h2>
-    <p class="meet-sub">Where should we meet on August 1st, Girlfriend's Day?</p>
+<!-- ============ PHOTO ALBUM OVERLAY ============ -->
+<div class="album-overlay" id="album-overlay">
+  <!-- Floating petals -->
+  <div id="album-petals"></div>
 
-    <div class="field-group">
-      <label class="field-label" for="meet-input">Your answer</label>
-      <textarea class="meet-input" id="meet-input" placeholder="e.g. that little coffee shop near the lake, at 4pm..."></textarea>
-    </div>
+  <div class="album-title-section">
+    <h2>Our Moments Together</h2>
+    <div class="album-subtitle">a chapter of us, one page at a time</div>
+  </div>
 
-    <div class="status-msg" id="meet-status"></div>
-
-    <div class="btn-row">
-      <button class="btn" id="send-btn">Send 🌻</button>
+  <div class="book-container">
+    <div class="book" id="album-book">
+      <!-- Page spreads will be generated by JS -->
     </div>
   </div>
+
+  <div class="album-nav">
+    <button id="prev-page" disabled>← Previous</button>
+    <span class="page-indicator" id="page-indicator">1 / 10</span>
+    <button id="next-page">Next →</button>
+  </div>
 </div>
+
+<!-- SVG floral template (hidden, cloned by JS) -->
+<svg id="floral-svg-template" style="display:none" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <g fill="#b8a060">
+    <path d="M10,50 Q25,20 50,10 Q40,35 45,50 Z"/>
+    <path d="M10,50 Q25,80 50,90 Q40,65 45,50 Z"/>
+    <circle cx="18" cy="40" r="4"/>
+    <circle cx="18" cy="60" r="4"/>
+    <circle cx="30" cy="28" r="3"/>
+    <circle cx="30" cy="72" r="3"/>
+    <path d="M5,50 Q10,45 18,50 Q10,55 5,50 Z"/>
+    <ellipse cx="42" cy="18" rx="5" ry="3" transform="rotate(-30 42 18)"/>
+    <ellipse cx="42" cy="82" rx="5" ry="3" transform="rotate(30 42 82)"/>
+  </g>
+</svg>
 
 <script>
 (function(){
@@ -620,11 +914,25 @@
     pollenLayer.appendChild(p);
   }
 
+  // ---------- Album petals background ----------
+  const petalLayer = document.getElementById('album-petals');
+  const petalShapes = ['🌸', '🌷', '✿', '❀', '🌺'];
+  for(let i=0;i<18;i++){
+    const petal = document.createElement('div');
+    petal.className = 'petal';
+    petal.textContent = petalShapes[i % petalShapes.length];
+    petal.style.left = Math.random()*100+"%";
+    petal.style.animationDuration = (12 + Math.random()*15)+"s";
+    petal.style.animationDelay = (Math.random()*-20)+"s";
+    petal.style.fontSize = (14 + Math.random()*12)+"px";
+    petalLayer.appendChild(petal);
+  }
+
   // ---------- envelope interaction ----------
   const envelopeWrap = document.getElementById('envelope-wrap');
   const envelope = document.getElementById('envelope');
   const letterOverlay = document.getElementById('letter-overlay');
-  const meetOverlay = document.getElementById('meet-overlay');
+  const albumOverlay = document.getElementById('album-overlay');
   const heroStage = document.getElementById('hero-stage');
 
   function openEnvelope(){
@@ -641,38 +949,270 @@
     if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); openEnvelope(); }
   });
 
-  // ---------- next button ----------
+  // ---------- ALBUM DATA ----------
+  const imgDir = 'Pictures/WhatsApp Unknown 2026-09-01 at 18.33.34';
+  const albumPages = [
+    {
+      leftImage: imgDir+'/1.jpeg',
+      rightImage: imgDir+'/2.jpeg',
+      leftQuote: '"Every love story is beautiful, but ours is my favorite."',
+      rightQuote: '',
+      leftCaption: 'Where It All Began',
+      rightCaption: 'The First Smile',
+      flower: '🌹'
+    },
+    {
+      leftImage: imgDir+'/3.jpeg',
+      rightImage: imgDir+'/4.jpeg',
+      leftQuote: '',
+      rightQuote: '"You are my today and all of my tomorrows."',
+      leftCaption: 'Our Little World',
+      rightCaption: 'Heart to Heart',
+      flower: '🌸'
+    },
+    {
+      leftImage: imgDir+'/5.jpeg',
+      rightImage: imgDir+'/6.jpeg',
+      leftQuote: '"In all the world, there is no heart for me like yours."',
+      rightQuote: '',
+      leftCaption: 'Golden Moments',
+      rightCaption: 'Side by Side',
+      flower: '🌻'
+    },
+    {
+      leftImage: imgDir+'/7.jpeg',
+      rightImage: imgDir+'/8.jpeg',
+      leftQuote: '',
+      rightQuote: '"I fell in love the way you fall asleep — slowly, then all at once."',
+      leftCaption: 'Unscripted Joy',
+      rightCaption: 'Your Laughter',
+      flower: '🌷'
+    },
+    {
+      leftImage: imgDir+'/9.jpeg',
+      rightImage: imgDir+'/10.jpeg',
+      leftQuote: '"Being near you feels like home. Not a place, just you."',
+      rightQuote: '',
+      leftCaption: 'Silly & Beautiful',
+      rightCaption: 'My Comfort',
+      flower: '❀'
+    },
+    {
+      leftImage: imgDir+'/11.jpeg',
+      rightImage: imgDir+'/12.jpeg',
+      leftQuote: '',
+      rightQuote: '"Whatever our souls are made of, yours and mine are the same."',
+      leftCaption: 'Adventures Together',
+      rightCaption: 'Stolen Glances',
+      flower: '🌺'
+    },
+    {
+      leftImage: imgDir+'/13.jpeg',
+      rightImage: imgDir+'/14.jpeg',
+      leftQuote: '"You turned my loneliness into something warm and full."',
+      rightQuote: '',
+      leftCaption: 'Pure Magic',
+      rightCaption: 'My Maridim',
+      flower: '🌹'
+    },
+    {
+      leftImage: imgDir+'/15.jpeg',
+      rightImage: imgDir+'/16.jpeg',
+      leftQuote: '',
+      rightQuote: '"I love you not only for what you are, but for what I am when I am with you."',
+      leftCaption: 'The Best Birthday',
+      rightCaption: 'Your Words',
+      flower: '🌸'
+    },
+    {
+      leftImage: imgDir+'/17.jpeg',
+      rightImage: imgDir+'/18.jpeg',
+      leftQuote: '"Some people look for a beautiful place. Others make a place beautiful."',
+      rightQuote: '',
+      leftCaption: 'Every Small Thing',
+      rightCaption: 'Our Tiktoks',
+      flower: '🌻'
+    },
+    {
+      leftImage: imgDir+'/19.jpeg',
+      rightImage: imgDir+'/20.jpeg',
+      leftQuote: '',
+      rightQuote: '"Here is to many more months, many more small moments, and many more reasons to fall for you again and again."',
+      leftCaption: 'Forever & Always',
+      rightCaption: 'One Month ♥',
+      flower: '🌷'
+    },
+    {
+      leftImage: imgDir+'/21.jpeg',
+      rightImage: imgDir+'/22.jpeg',
+      leftQuote: '"You are the best thing that has ever been mine."',
+      rightQuote: '',
+      leftCaption: 'Us, Always',
+      rightCaption: 'To Infinity ♥',
+      flower: '🌹'
+    }
+  ];
+
+  // ---------- Build album pages ----------
+  const albumBook = document.getElementById('album-book');
+
+  function createFloralSVG(className){
+    const template = document.getElementById('floral-svg-template');
+    const clone = template.cloneNode(true);
+    clone.removeAttribute('id');
+    clone.removeAttribute('style');
+    clone.classList.add('floral-corner', className);
+    return clone;
+  }
+
+  albumPages.forEach((page, idx)=>{
+    const spread = document.createElement('div');
+    spread.className = 'page-spread' + (idx === 0 ? ' active' : '');
+    spread.dataset.page = idx;
+
+    // Left page
+    const leftPage = document.createElement('div');
+    leftPage.className = 'page-left';
+
+    // Floral corners on left page
+    leftPage.appendChild(createFloralSVG('top-left'));
+    leftPage.appendChild(createFloralSVG('bottom-right'));
+
+    if(page.leftQuote){
+      const quoteDiv = document.createElement('div');
+      quoteDiv.className = 'page-quote';
+      quoteDiv.innerHTML = `<span class="quote-flower">${page.flower}</span>${page.leftQuote}`;
+      leftPage.appendChild(quoteDiv);
+    }
+
+    const leftFrame = document.createElement('div');
+    leftFrame.className = 'photo-frame';
+    leftFrame.innerHTML = `
+      <img src="${page.leftImage}" alt="${page.leftCaption}"
+           onerror="this.style.display='none';this.parentNode.innerHTML='<div class=\\'photo-placeholder\\'><span class=\\'ph-icon\\'>${page.flower}</span><span>${page.leftCaption}</span></div>'">
+    `;
+    leftPage.appendChild(leftFrame);
+
+    const leftCaption = document.createElement('div');
+    leftCaption.className = 'page-caption';
+    leftCaption.innerHTML = `<div class="couple-names">${page.leftCaption}</div>`;
+    leftPage.appendChild(leftCaption);
+
+    if(!page.leftQuote){
+      const divider = document.createElement('div');
+      divider.className = 'flower-divider';
+      divider.textContent = '✿ ✿ ✿';
+      leftPage.appendChild(divider);
+    }
+
+    // Right page
+    const rightPage = document.createElement('div');
+    rightPage.className = 'page-right';
+
+    // Floral corners on right page
+    rightPage.appendChild(createFloralSVG('top-right'));
+    rightPage.appendChild(createFloralSVG('bottom-left'));
+
+    const rightFrame = document.createElement('div');
+    rightFrame.className = 'photo-frame';
+    rightFrame.innerHTML = `
+      <img src="${page.rightImage}" alt="${page.rightCaption}"
+           onerror="this.style.display='none';this.parentNode.innerHTML='<div class=\\'photo-placeholder\\'><span class=\\'ph-icon\\'>${page.flower}</span><span>${page.rightCaption}</span></div>'">
+    `;
+    rightPage.appendChild(rightFrame);
+
+    if(page.rightQuote){
+      const quoteDiv = document.createElement('div');
+      quoteDiv.className = 'page-quote';
+      quoteDiv.innerHTML = `<span class="quote-flower">${page.flower}</span>${page.rightQuote}`;
+      rightPage.appendChild(quoteDiv);
+    }
+
+    const rightCaption = document.createElement('div');
+    rightCaption.className = 'page-caption';
+    rightCaption.innerHTML = `<div class="couple-names">${page.rightCaption}</div>`;
+    rightPage.appendChild(rightCaption);
+
+    if(!page.rightQuote){
+      const divider = document.createElement('div');
+      divider.className = 'flower-divider';
+      divider.textContent = '❋ ❋ ❋';
+      rightPage.appendChild(divider);
+    }
+
+    spread.appendChild(leftPage);
+    spread.appendChild(rightPage);
+    albumBook.appendChild(spread);
+  });
+
+  // ---------- Album navigation ----------
+  let currentPage = 0;
+  const totalPages = albumPages.length;
+  const prevBtn = document.getElementById('prev-page');
+  const nextPageBtn = document.getElementById('next-page');
+  const pageIndicator = document.getElementById('page-indicator');
+  const spreads = albumBook.querySelectorAll('.page-spread');
+
+  function updatePageIndicator(){
+    pageIndicator.textContent = `${currentPage + 1} / ${totalPages}`;
+    prevBtn.disabled = currentPage === 0;
+    nextPageBtn.disabled = currentPage === totalPages - 1;
+  }
+
+  function goToPage(newPage){
+    if(newPage < 0 || newPage >= totalPages || newPage === currentPage) return;
+
+    const oldSpread = spreads[currentPage];
+    const newSpread = spreads[newPage];
+
+    oldSpread.classList.add('turning-out');
+    oldSpread.addEventListener('animationend', function handler(){
+      oldSpread.classList.remove('active', 'turning-out');
+      oldSpread.removeEventListener('animationend', handler);
+    });
+
+    setTimeout(()=>{
+      newSpread.classList.add('active', 'turning-in');
+      newSpread.addEventListener('animationend', function handler(){
+        newSpread.classList.remove('turning-in');
+        newSpread.removeEventListener('animationend', handler);
+      });
+    }, 250);
+
+    currentPage = newPage;
+    updatePageIndicator();
+  }
+
+  prevBtn.addEventListener('click', ()=> goToPage(currentPage - 1));
+  nextPageBtn.addEventListener('click', ()=> goToPage(currentPage + 1));
+
+  // Keyboard navigation for album
+  document.addEventListener('keydown', (e)=>{
+    if(!albumOverlay.classList.contains('visible')) return;
+    if(e.key === 'ArrowLeft') goToPage(currentPage - 1);
+    if(e.key === 'ArrowRight') goToPage(currentPage + 1);
+  });
+
+  // Touch swipe for album
+  let touchStartX = 0;
+  albumOverlay.addEventListener('touchstart', (e)=>{
+    touchStartX = e.changedTouches[0].screenX;
+  }, {passive:true});
+  albumOverlay.addEventListener('touchend', (e)=>{
+    const diff = touchStartX - e.changedTouches[0].screenX;
+    if(Math.abs(diff) > 50){
+      if(diff > 0) goToPage(currentPage + 1);
+      else goToPage(currentPage - 1);
+    }
+  }, {passive:true});
+
+  // ---------- next button → album ----------
   document.getElementById('next-btn').addEventListener('click', ()=>{
     letterOverlay.classList.remove('visible');
-    setTimeout(()=> meetOverlay.classList.add('visible'), 350);
+    setTimeout(()=> albumOverlay.classList.add('visible'), 350);
   });
 
-  // ---------- send / mailto ----------
-  const meetInput = document.getElementById('meet-input');
-  const meetStatus = document.getElementById('meet-status');
-  const sendBtn = document.getElementById('send-btn');
-
-  sendBtn.addEventListener('click', ()=>{
-    const answer = meetInput.value.trim();
-    if(!answer){
-      meetStatus.textContent = "Don't be shy, tell me where 🌻";
-      meetStatus.classList.add('error');
-      meetInput.focus();
-      return;
-    }
-    meetStatus.classList.remove('error');
-
-    const subject = encodeURIComponent("Our meeting spot for Girlfriend's Day 🌻");
-    const body = encodeURIComponent(
-      "Hey!\n\nFor August 1st, Girlfriend's Day, I'd love to meet here:\n\n" +
-      answer +
-      "\n\nSent with love from the sunflower letter 🌻"
-    );
-    const mailtoUrl = `mailto:parajuliabhi.1@gmail.com?subject=${subject}&body=${body}`;
-
-    meetStatus.textContent = "Opening your email app to send this to Abhi… 💌";
-    window.location.href = mailtoUrl;
-  });
+  updatePageIndicator();
 })();
 </script>
 </body>
