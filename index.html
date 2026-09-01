@@ -168,6 +168,8 @@
     perspective:1400px;
     cursor:pointer;
     user-select:none;
+    touch-action:manipulation;
+    -webkit-tap-highlight-color:transparent;
   }
 
   .envelope{
@@ -176,6 +178,7 @@
     max-width:80vw;
     height:196px;
     transition:transform .5s ease;
+    cursor:pointer;
   }
   .envelope-wrap:hover .envelope{ transform:translateY(-4px); }
 
@@ -246,9 +249,10 @@
     background:radial-gradient(circle at 35% 30%, var(--sun-petal-light), var(--accent-rose) 75%);
     display:flex;align-items:center;justify-content:center;
     font-size:26px;
-    box-shadow:0 4px 10px rgba(0,0,0,.3), inset 0 0 0 2px #5e565640;
+    box-shadow:0 4px 10px rgba(0,0,0,.3), inset 0 0 0 2px rgba(255,255,255,.25);
     z-index:6;
     transition:transform .5s ease .1s, opacity .4s ease .1s;
+    cursor:pointer;
   }
   .envelope.open .seal{
     transform:translate(-50%,-50%) scale(0);
@@ -262,6 +266,9 @@
     font-size:18px;
     color:var(--ink-soft);
     animation:bob 2.4s ease-in-out infinite;
+    cursor:pointer;
+    user-select:none;
+    touch-action:manipulation;
   }
   @keyframes bob{
     0%,100%{ transform:translateY(0); }
@@ -280,11 +287,13 @@
     background:rgba(74,52,24,0.28);
     backdrop-filter:blur(3px);
     opacity:0;
+    visibility:hidden;
     pointer-events:none;
-    transition:opacity .5s ease;
+    transition:opacity .5s ease, visibility .5s ease;
   }
   .overlay.visible{
     opacity:1;
+    visibility:visible;
     pointer-events:auto;
   }
 
@@ -421,12 +430,14 @@
     justify-content:center;
     background:linear-gradient(135deg, #2c1810 0%, #3d2518 30%, #1a0e08 100%);
     opacity:0;
+    visibility:hidden;
     pointer-events:none;
-    transition:opacity .6s ease;
+    transition:opacity .6s ease, visibility .6s ease;
     overflow:hidden;
   }
   .album-overlay.visible{
     opacity:1;
+    visibility:visible;
     pointer-events:auto;
   }
 
@@ -624,18 +635,21 @@
     opacity:0.6;
   }
 
-  /* Page caption / names */
+  /* Page caption / love notes */
   .page-caption{
     text-align:center;
-    padding:6px 8px 0;
+    padding:6px 10px 0;
     flex-shrink:0;
   }
   .page-caption .couple-names{
-    font-family:'Playfair Display', serif;
-    font-size:clamp(11px, 1.5vw, 15px);
-    letter-spacing:0.2em;
-    text-transform:uppercase;
-    color:#8a7560;
+    font-family:'Cormorant Garamond', serif;
+    font-style:italic;
+    font-size:clamp(13px, 1.8vw, 17px);
+    font-weight:600;
+    letter-spacing:0.02em;
+    text-transform:none;
+    color:#6b5333;
+    line-height:1.3;
   }
   .page-caption .date-text{
     font-family:'Cormorant Garamond', serif;
@@ -934,7 +948,7 @@
 
   <div class="album-nav">
     <button id="prev-page" disabled>← Previous</button>
-    <span class="page-indicator" id="page-indicator">1 / 10</span>
+    <span class="page-indicator" id="page-indicator">1 / 11</span>
     <button id="next-page">Next →</button>
   </div>
 </div>
@@ -1033,6 +1047,7 @@
   // ---------- Navigation & Views ----------
   const envelopeWrap = document.getElementById('envelope-wrap');
   const envelope = document.getElementById('envelope');
+  const tapLabel = document.querySelector('.tap-label');
   const letterOverlay = document.getElementById('letter-overlay');
   const albumOverlay = document.getElementById('album-overlay');
   const heroStage = document.getElementById('hero-stage');
@@ -1056,18 +1071,32 @@
     if(navLetterBtn) navLetterBtn.classList.remove('active');
   }
 
-  function openEnvelope(){
-    if(envelope.classList.contains('open')) return;
+  let isOpening = false;
+  function handleOpenEnvelope(e){
+    if(e && e.type === 'keydown' && e.key !== 'Enter' && e.key !== ' ') return;
+    if(envelope.classList.contains('open')){
+      showLetterView();
+      return;
+    }
+    if(isOpening) return;
+    isOpening = true;
     envelope.classList.add('open');
     setTimeout(()=>{
       showLetterView();
-    }, 750);
+      isOpening = false;
+    }, 700);
   }
 
-  envelopeWrap.addEventListener('click', openEnvelope);
-  envelopeWrap.addEventListener('keydown', (e)=>{
-    if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); openEnvelope(); }
-  });
+  if(envelopeWrap){
+    envelopeWrap.addEventListener('click', handleOpenEnvelope);
+    envelopeWrap.addEventListener('keydown', handleOpenEnvelope);
+  }
+  if(envelope){
+    envelope.addEventListener('click', handleOpenEnvelope);
+  }
+  if(tapLabel){
+    tapLabel.addEventListener('click', handleOpenEnvelope);
+  }
 
   if(navLetterBtn){
     navLetterBtn.addEventListener('click', showLetterView);
@@ -1081,101 +1110,101 @@
     {
       leftImage: '1.jpeg',
       rightImage: '2.jpeg',
-      leftQuote: '"Every love story is beautiful, but ours is my favorite."',
+      leftQuote: '"Before you, I was just existing — you brought light and warmth into my whole world."',
       rightQuote: '',
-      leftCaption: 'Where It All Began',
-      rightCaption: 'The First Smile',
-      flower: '🌹'
+      leftCaption: 'You taught me how to love myself again',
+      rightCaption: 'Being near you feels like home, not a place, just you',
+      flower: '🌻'
     },
     {
       leftImage: '3.jpeg',
       rightImage: '4.jpeg',
       leftQuote: '',
-      rightQuote: '"You are my today and all of my tomorrows."',
-      leftCaption: 'Our Little World',
-      rightCaption: 'Heart to Heart',
+      rightQuote: '"Whenever I am low, your gentle warmth is the only shelter I need."',
+      leftCaption: 'In your arms, all my heavy thoughts turn into peace',
+      rightCaption: 'You make the saddest days feel lighter with just your presence',
       flower: '🌸'
     },
     {
       leftImage: '5.jpeg',
       rightImage: '6.jpeg',
-      leftQuote: '"In all the world, there is no heart for me like yours."',
+      leftQuote: '"I never knew what true comfort felt like until you held my hand."',
       rightQuote: '',
-      leftCaption: 'Golden Moments',
-      rightCaption: 'Side by Side',
-      flower: '🌻'
+      leftCaption: 'My sweetest comfort and my safest place',
+      rightCaption: 'Every beat of my heart quietly speaks your name',
+      flower: '🌹'
     },
     {
       leftImage: '7.jpeg',
       rightImage: '8.jpeg',
       leftQuote: '',
-      rightQuote: '"I fell in love the way you fall asleep — slowly, then all at once."',
-      leftCaption: 'Unscripted Joy',
-      rightCaption: 'Your Laughter',
+      rightQuote: '"I love your silliness, your energy, and the pure joy you bring into my life."',
+      leftCaption: 'Your laughter is my favorite melody in the world',
+      rightCaption: 'Even when you rage bait me, I just fall deeper in love',
       flower: '🌷'
     },
     {
       leftImage: '9.jpeg',
       rightImage: '10.jpeg',
-      leftQuote: '"Being near you feels like home. Not a place, just you."',
+      leftQuote: '"You took a lonely heart and made it feel completely full and cherished."',
       rightQuote: '',
-      leftCaption: 'Silly & Beautiful',
-      rightCaption: 'My Comfort',
+      leftCaption: 'Hearing you say "maridim" makes me smile every single time',
+      rightCaption: 'You turned my quiet emptiness into boundless warmth',
       flower: '❀'
     },
     {
       leftImage: '11.jpeg',
       rightImage: '12.jpeg',
       leftQuote: '',
-      rightQuote: '"Whatever our souls are made of, yours and mine are the same."',
-      leftCaption: 'Adventures Together',
-      rightCaption: 'Stolen Glances',
+      rightQuote: '"In a world full of noise, your love is the sweetest, calmest peace."',
+      leftCaption: 'You give me a thousand reasons to fall for you every day',
+      rightCaption: 'Your gentle heart and kindness take my breath away',
       flower: '🌺'
     },
     {
       leftImage: '13.jpeg',
       rightImage: '14.jpeg',
-      leftQuote: '"You turned my loneliness into something warm and full."',
+      leftQuote: '"The letter you wrote me still lives in my heart and heals my soul."',
       rightQuote: '',
-      leftCaption: 'Pure Magic',
-      rightCaption: 'My Maridim',
-      flower: '🌹'
+      leftCaption: 'Your words are my comfort on every hard day',
+      rightCaption: 'The sweetest gift life could ever bless me with',
+      flower: '🌻'
     },
     {
       leftImage: '15.jpeg',
       rightImage: '16.jpeg',
       leftQuote: '',
-      rightQuote: '"I love you not only for what you are, but for what I am when I am with you."',
-      leftCaption: 'The Best Birthday',
-      rightCaption: 'Your Words',
+      rightQuote: '"I love you not only for who you are, but for who I become when I am with you."',
+      leftCaption: 'Every little glance from you makes my heart skip a beat',
+      rightCaption: 'The chocolate, the flowers, but most of all — you',
       flower: '🌸'
     },
     {
       leftImage: '17.jpeg',
       rightImage: '18.jpeg',
-      leftQuote: '"Some people look for a beautiful place. Others make a place beautiful."',
+      leftQuote: '"The way you love me is more warmth than I ever knew I was missing."',
       rightQuote: '',
-      leftCaption: 'Every Small Thing',
-      rightCaption: 'Our Tiktoks',
-      flower: '🌻'
+      leftCaption: 'Making silly tiktoks and making memories with my favorite person',
+      rightCaption: 'You are my favorite thought from morning till midnight',
+      flower: '🌹'
     },
     {
       leftImage: '19.jpeg',
       rightImage: '20.jpeg',
       leftQuote: '',
-      rightQuote: '"Here is to many more months, many more small moments, and many more reasons to fall for you again and again."',
-      leftCaption: 'Forever & Always',
-      rightCaption: 'One Month ♥',
+      rightQuote: '"Here is to many more months, countless small moments, and endless reasons to love you."',
+      leftCaption: 'One month with you, and a lifetime more to go',
+      rightCaption: 'Loving you is the easiest and most beautiful thing I do',
       flower: '🌷'
     },
     {
       leftImage: '21.jpeg',
       rightImage: '22.jpeg',
-      leftQuote: '"You are the best thing that has ever been mine."',
+      leftQuote: '"You are my sunflower, my home, and the deepest love of my life."',
       rightQuote: '',
-      leftCaption: 'Us, Always',
-      rightCaption: 'To Infinity ♥',
-      flower: '🌹'
+      leftCaption: 'Forever yours, with all my heart and soul',
+      rightCaption: 'Yours Pineapple, today, tomorrow, and always 🍍♥',
+      flower: '🌻'
     }
   ];
 
