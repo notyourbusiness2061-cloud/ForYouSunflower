@@ -246,7 +246,7 @@
     background:radial-gradient(circle at 35% 30%, var(--sun-petal-light), var(--accent-rose) 75%);
     display:flex;align-items:center;justify-content:center;
     font-size:26px;
-    box-shadow:0 4px 10px rgba(0,0,0,.3), inset 0 0 0 2px rgba(255,255,255,.25);
+    box-shadow:0 4px 10px rgba(0,0,0,.3), inset 0 0 0 2px #5e565640;
     z-index:6;
     transition:transform .5s ease .1s, opacity .4s ease .1s;
   }
@@ -733,7 +733,101 @@
     flex-shrink:0;
   }
 
+  /* ================= NAVBAR ================= */
+  .navbar{
+    position:fixed;
+    top:0; left:0; right:0;
+    z-index:50;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:4px;
+    padding:12px 16px;
+    background:rgba(243,231,201,0.85);
+    backdrop-filter:blur(12px);
+    border-bottom:1px solid rgba(201,172,111,0.3);
+    box-shadow:0 2px 16px rgba(74,52,24,0.1);
+    transform:translateY(-100%);
+    transition:transform .4s cubic-bezier(.4,0,.2,1);
+  }
+  .navbar.visible{
+    transform:translateY(0);
+  }
+  .nav-btn{
+    font-family:'Quicksand',sans-serif;
+    font-weight:700;
+    font-size:13px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    background:transparent;
+    border:1.5px solid transparent;
+    padding:9px 22px;
+    border-radius:24px;
+    cursor:pointer;
+    transition:all .25s ease;
+    position:relative;
+  }
+  .nav-btn:hover{
+    color:var(--ink);
+    background:rgba(184,134,11,0.08);
+  }
+  .nav-btn.active{
+    color:var(--accent-rose);
+    background:rgba(193,68,14,0.08);
+    border-color:rgba(193,68,14,0.25);
+  }
+  .nav-btn .nav-icon{
+    margin-right:6px;
+    font-size:15px;
+  }
+  .nav-divider{
+    width:1px;
+    height:20px;
+    background:rgba(201,172,111,0.4);
+    margin:0 8px;
+  }
+  .nav-brand{
+    font-family:'Parisienne',cursive;
+    font-size:22px;
+    color:var(--accent-rose);
+    margin-right:20px;
+    pointer-events:none;
+  }
+
+  /* Adjust body for navbar space */
+  .navbar.visible ~ #scene,
+  .navbar.visible ~ .stage{
+    padding-top:56px;
+  }
+
+  /* Album overlay needs back button when opened from navbar */
+  .album-back-btn{
+    position:absolute;
+    top:18px;
+    left:18px;
+    z-index:5;
+    font-family:'Quicksand',sans-serif;
+    font-weight:700;
+    font-size:13px;
+    color:#f5e6d0;
+    background:rgba(255,255,255,0.08);
+    border:1px solid rgba(255,255,255,0.15);
+    padding:8px 18px;
+    border-radius:20px;
+    cursor:pointer;
+    backdrop-filter:blur(4px);
+    transition:all .25s ease;
+    display:none;
+  }
+  .album-back-btn:hover{
+    background:rgba(255,255,255,0.15);
+    border-color:rgba(255,255,255,0.25);
+  }
+
   @media (max-width:480px){
+    .nav-brand{ display:none; }
+    .nav-btn{ padding:7px 14px; font-size:12px; }
     .parchment{ padding:28px 20px 22px; }
     .letter-body{ font-size:17px; }
     .page-left, .page-right{ padding:14px; }
@@ -756,6 +850,14 @@
 </style>
 </head>
 <body>
+
+<!-- ============ NAVBAR ============ -->
+<nav class="navbar visible" id="navbar">
+  <span class="nav-brand">Meri Mayaluu 🌻</span>
+  <button class="nav-btn active" id="nav-letter-btn"><span class="nav-icon">💌</span>Letter</button>
+  <div class="nav-divider"></div>
+  <button class="nav-btn" id="nav-album-btn"><span class="nav-icon">📖</span>Album</button>
+</nav>
 
 <!-- ============ BACKGROUND SCENE ============ -->
 <div id="scene">
@@ -928,19 +1030,37 @@
     petalLayer.appendChild(petal);
   }
 
-  // ---------- envelope interaction ----------
+  // ---------- Navigation & Views ----------
   const envelopeWrap = document.getElementById('envelope-wrap');
   const envelope = document.getElementById('envelope');
   const letterOverlay = document.getElementById('letter-overlay');
   const albumOverlay = document.getElementById('album-overlay');
   const heroStage = document.getElementById('hero-stage');
+  const navLetterBtn = document.getElementById('nav-letter-btn');
+  const navAlbumBtn = document.getElementById('nav-album-btn');
+
+  function showLetterView(){
+    envelope.classList.add('open');
+    albumOverlay.classList.remove('visible');
+    letterOverlay.classList.add('visible');
+    heroStage.style.opacity = 0;
+    if(navLetterBtn) navLetterBtn.classList.add('active');
+    if(navAlbumBtn) navAlbumBtn.classList.remove('active');
+  }
+
+  function showAlbumView(){
+    letterOverlay.classList.remove('visible');
+    albumOverlay.classList.add('visible');
+    heroStage.style.opacity = 0;
+    if(navAlbumBtn) navAlbumBtn.classList.add('active');
+    if(navLetterBtn) navLetterBtn.classList.remove('active');
+  }
 
   function openEnvelope(){
     if(envelope.classList.contains('open')) return;
     envelope.classList.add('open');
     setTimeout(()=>{
-      letterOverlay.classList.add('visible');
-      heroStage.style.opacity = 0;
+      showLetterView();
     }, 750);
   }
 
@@ -949,12 +1069,18 @@
     if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); openEnvelope(); }
   });
 
+  if(navLetterBtn){
+    navLetterBtn.addEventListener('click', showLetterView);
+  }
+  if(navAlbumBtn){
+    navAlbumBtn.addEventListener('click', showAlbumView);
+  }
+
   // ---------- ALBUM DATA ----------
-  const imgDir = 'Pictures/WhatsApp Unknown 2026-09-01 at 18.33.34';
   const albumPages = [
     {
-      leftImage: imgDir+'/1.jpeg',
-      rightImage: imgDir+'/2.jpeg',
+      leftImage: '1.jpeg',
+      rightImage: '2.jpeg',
       leftQuote: '"Every love story is beautiful, but ours is my favorite."',
       rightQuote: '',
       leftCaption: 'Where It All Began',
@@ -962,8 +1088,8 @@
       flower: '🌹'
     },
     {
-      leftImage: imgDir+'/3.jpeg',
-      rightImage: imgDir+'/4.jpeg',
+      leftImage: '3.jpeg',
+      rightImage: '4.jpeg',
       leftQuote: '',
       rightQuote: '"You are my today and all of my tomorrows."',
       leftCaption: 'Our Little World',
@@ -971,8 +1097,8 @@
       flower: '🌸'
     },
     {
-      leftImage: imgDir+'/5.jpeg',
-      rightImage: imgDir+'/6.jpeg',
+      leftImage: '5.jpeg',
+      rightImage: '6.jpeg',
       leftQuote: '"In all the world, there is no heart for me like yours."',
       rightQuote: '',
       leftCaption: 'Golden Moments',
@@ -980,8 +1106,8 @@
       flower: '🌻'
     },
     {
-      leftImage: imgDir+'/7.jpeg',
-      rightImage: imgDir+'/8.jpeg',
+      leftImage: '7.jpeg',
+      rightImage: '8.jpeg',
       leftQuote: '',
       rightQuote: '"I fell in love the way you fall asleep — slowly, then all at once."',
       leftCaption: 'Unscripted Joy',
@@ -989,8 +1115,8 @@
       flower: '🌷'
     },
     {
-      leftImage: imgDir+'/9.jpeg',
-      rightImage: imgDir+'/10.jpeg',
+      leftImage: '9.jpeg',
+      rightImage: '10.jpeg',
       leftQuote: '"Being near you feels like home. Not a place, just you."',
       rightQuote: '',
       leftCaption: 'Silly & Beautiful',
@@ -998,8 +1124,8 @@
       flower: '❀'
     },
     {
-      leftImage: imgDir+'/11.jpeg',
-      rightImage: imgDir+'/12.jpeg',
+      leftImage: '11.jpeg',
+      rightImage: '12.jpeg',
       leftQuote: '',
       rightQuote: '"Whatever our souls are made of, yours and mine are the same."',
       leftCaption: 'Adventures Together',
@@ -1007,8 +1133,8 @@
       flower: '🌺'
     },
     {
-      leftImage: imgDir+'/13.jpeg',
-      rightImage: imgDir+'/14.jpeg',
+      leftImage: '13.jpeg',
+      rightImage: '14.jpeg',
       leftQuote: '"You turned my loneliness into something warm and full."',
       rightQuote: '',
       leftCaption: 'Pure Magic',
@@ -1016,8 +1142,8 @@
       flower: '🌹'
     },
     {
-      leftImage: imgDir+'/15.jpeg',
-      rightImage: imgDir+'/16.jpeg',
+      leftImage: '15.jpeg',
+      rightImage: '16.jpeg',
       leftQuote: '',
       rightQuote: '"I love you not only for what you are, but for what I am when I am with you."',
       leftCaption: 'The Best Birthday',
@@ -1025,8 +1151,8 @@
       flower: '🌸'
     },
     {
-      leftImage: imgDir+'/17.jpeg',
-      rightImage: imgDir+'/18.jpeg',
+      leftImage: '17.jpeg',
+      rightImage: '18.jpeg',
       leftQuote: '"Some people look for a beautiful place. Others make a place beautiful."',
       rightQuote: '',
       leftCaption: 'Every Small Thing',
@@ -1034,8 +1160,8 @@
       flower: '🌻'
     },
     {
-      leftImage: imgDir+'/19.jpeg',
-      rightImage: imgDir+'/20.jpeg',
+      leftImage: '19.jpeg',
+      rightImage: '20.jpeg',
       leftQuote: '',
       rightQuote: '"Here is to many more months, many more small moments, and many more reasons to fall for you again and again."',
       leftCaption: 'Forever & Always',
@@ -1043,8 +1169,8 @@
       flower: '🌷'
     },
     {
-      leftImage: imgDir+'/21.jpeg',
-      rightImage: imgDir+'/22.jpeg',
+      leftImage: '21.jpeg',
+      rightImage: '22.jpeg',
       leftQuote: '"You are the best thing that has ever been mine."',
       rightQuote: '',
       leftCaption: 'Us, Always',
@@ -1208,8 +1334,7 @@
 
   // ---------- next button → album ----------
   document.getElementById('next-btn').addEventListener('click', ()=>{
-    letterOverlay.classList.remove('visible');
-    setTimeout(()=> albumOverlay.classList.add('visible'), 350);
+    showAlbumView();
   });
 
   updatePageIndicator();
